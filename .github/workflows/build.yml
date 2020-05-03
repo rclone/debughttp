@@ -1,0 +1,43 @@
+---
+# Github Actions build for rclone
+# -*- compile-command: "yamllint -f parsable build.yml" -*-
+
+name: build
+
+# Trigger the workflow on push or pull request
+on:
+  push:
+    branches:
+      - '*'
+    tags:
+      - '*'
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        go: ['1.14', '1.13', '1.12', '1.11']
+    name: Go ${{ matrix.go }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Setup Go
+        uses: actions/setup-go@v1
+        with:
+          go-version: ${{ matrix.go }}
+
+      - name: Version
+        run: go version
+
+      - name: Fetch dependencies
+        run: go get -t -v ./...
+
+      - name: Build
+        run: go install
+
+      - name: Run tests
+        run: go test -v
